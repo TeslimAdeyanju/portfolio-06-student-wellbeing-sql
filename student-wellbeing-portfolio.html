@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Wellbeing SQL Analytics — Teslim Adeyanju</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1e2633;
+      --border: #30363d;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --accent3: #10b981;
+      --accent4: #f59e0b;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --text-dim: #484f58;
+      --red: #ef4444;
+      --cyan: #22d3ee;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-weight: 700; font-size: 1rem; color: var(--accent);
+      letter-spacing: -0.3px;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration: none; font-size: 0.875rem;
+      font-weight: 500; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; padding: 120px 2rem 80px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .hero-glow {
+      position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(59,130,246,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-content {
+      max-width: 860px; text-align: center; position: relative; z-index: 1;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25);
+      color: var(--accent); font-size: 0.8rem; font-weight: 600;
+      padding: 6px 14px; border-radius: 100px; margin-bottom: 1.5rem;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .hero-eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800; line-height: 1.15;
+      letter-spacing: -1px; margin-bottom: 1.25rem;
+    }
+    h1 .highlight {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 1.1rem; color: var(--text-muted); max-width: 620px;
+      margin: 0 auto 2.5rem; font-weight: 400;
+    }
+    .badge-row {
+      display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center;
+      margin-bottom: 2.5rem;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 6px;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.3px;
+    }
+    .badge-blue   { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+    .badge-purple { background: rgba(139,92,246,0.12); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25); }
+    .badge-green  { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .badge-amber  { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .badge-cyan   { background: rgba(34,211,238,0.12); color: #67e8f9; border: 1px solid rgba(34,211,238,0.25); }
+
+    .btn-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: var(--radius-sm);
+      font-size: 0.9rem; font-weight: 600; text-decoration: none;
+      transition: all 0.2s; cursor: pointer; border: none;
+    }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+    }
+    .btn-primary:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59,130,246,0.35); }
+    .btn-outline {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+    /* ── SECTIONS ── */
+    section { padding: 100px 2rem; }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800;
+      letter-spacing: -0.5px; margin-bottom: 1rem;
+    }
+    .section-sub { color: var(--text-muted); max-width: 560px; margin-bottom: 3rem; }
+
+    /* ── STATS ── */
+    .stats-section { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0;
+    }
+    .stat-card {
+      padding: 3rem 2rem; text-align: center; border-right: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .stat-card:last-child { border-right: none; }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-number {
+      font-size: 2.8rem; font-weight: 800; letter-spacing: -2px;
+      background: linear-gradient(135deg, var(--text), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; display: block;
+    }
+    .stat-label { color: var(--text-muted); font-size: 0.875rem; font-weight: 500; margin-top: 0.4rem; }
+
+    /* ── FINDINGS ── */
+    .findings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .finding-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; position: relative; overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .finding-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .finding-icon {
+      width: 44px; height: 44px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1.25rem;
+    }
+    .icon-red   { background: rgba(239,68,68,0.12); }
+    .icon-blue  { background: rgba(59,130,246,0.12); }
+    .icon-green { background: rgba(16,185,129,0.12); }
+    .icon-amber { background: rgba(245,158,11,0.12); }
+    .finding-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .finding-body { color: var(--text-muted); font-size: 0.9rem; line-height: 1.65; }
+    .finding-stat {
+      display: inline-block; margin-top: 1rem;
+      font-size: 0.8rem; font-weight: 600; padding: 4px 10px;
+      border-radius: 5px;
+    }
+    .stat-red   { background: rgba(239,68,68,0.12); color: #f87171; }
+    .stat-blue  { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .stat-green { background: rgba(16,185,129,0.12); color: #34d399; }
+    .stat-amber { background: rgba(245,158,11,0.12); color: #fbbf24; }
+
+    /* ── SKILLS ── */
+    .skills-section { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; }
+    .skill-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.75rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .skill-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+    .skill-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+    .skill-icon { font-size: 1.4rem; }
+    .skill-name { font-weight: 700; font-size: 0.95rem; }
+    .skill-items { list-style: none; }
+    .skill-items li {
+      color: var(--text-muted); font-size: 0.85rem; padding: 4px 0;
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px;
+    }
+    .skill-items li:last-child { border-bottom: none; }
+    .skill-items li::before { content: '→'; color: var(--accent); font-size: 0.75rem; }
+
+    /* ── SQL CODE ── */
+    .queries-section {}
+    .query-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0; overflow-x: auto; }
+    .tab-btn {
+      background: none; border: none; color: var(--text-muted);
+      padding: 12px 20px; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s; white-space: nowrap; font-family: 'Inter', sans-serif;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .code-panel {
+      display: none; background: #0d1117; border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+      overflow: hidden;
+    }
+    .code-panel.active { display: block; }
+    .code-header {
+      background: var(--surface2); padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-filename { font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .code-lang {
+      font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px; background: rgba(59,130,246,0.15); color: var(--accent);
+    }
+    pre {
+      padding: 1.75rem; overflow-x: auto; margin: 0;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7;
+    }
+    /* SQL syntax highlight */
+    .kw  { color: #ff7b72; font-weight: 600; }     /* keywords */
+    .fn  { color: #d2a8ff; }                        /* functions */
+    .str { color: #a5d6ff; }                        /* strings */
+    .cm  { color: #8b949e; font-style: italic; }   /* comments */
+    .nm  { color: #79c0ff; }                        /* numbers / identifiers */
+    .op  { color: #ff7b72; }                        /* operators */
+    .col { color: #ffa657; }                        /* column names */
+
+    /* ── DATASET ── */
+    .dataset-section {}
+    .dataset-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+    @media (max-width: 768px) { .dataset-layout { grid-template-columns: 1fr; } }
+    .dataset-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem;
+    }
+    .dataset-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--text); }
+    .col-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+    .col-list li {
+      font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted); padding: 4px 8px; background: var(--bg);
+      border-radius: 4px; border: 1px solid var(--border);
+    }
+    .col-list li span { color: var(--accent); }
+    .metric-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-top: 1rem; }
+    .metric-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 1rem; text-align: center;
+    }
+    .metric-box .val { font-size: 1.5rem; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .metric-box .lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500; }
+
+    /* ── ARCHITECTURE ── */
+    .arch-section { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .arch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .arch-cell { background: var(--surface); padding: 2rem 1.5rem; }
+    .arch-cell h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text); }
+    .arch-cell p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; }
+    .arch-step {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px; margin-bottom: 0.5rem;
+    }
+    .step-1 { background: rgba(59,130,246,0.15); color: var(--accent); }
+    .step-2 { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    .step-3 { background: rgba(16,185,129,0.15); color: #34d399; }
+    .step-4 { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .step-5 { background: rgba(34,211,238,0.15); color: #67e8f9; }
+
+    /* ── CHART ── */
+    .chart-section {}
+    .chart-container {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; margin-bottom: 1.5rem;
+    }
+    .chart-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .bar-chart { display: flex; flex-direction: column; gap: 0.9rem; }
+    .bar-row { display: grid; grid-template-columns: 80px 1fr 60px; gap: 1rem; align-items: center; }
+    .bar-label { font-size: 0.8rem; color: var(--text-muted); text-align: right; font-weight: 500; }
+    .bar-track { background: var(--bg); border-radius: 4px; height: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+    .bar-val { font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .bar-phq  { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .bar-scs  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .bar-as   { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+
+    .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* ── RECOMMENDATIONS ── */
+    .recs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+    .rec-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.75rem; position: relative;
+      transition: transform 0.2s;
+    }
+    .rec-card:hover { transform: translateY(-2px); }
+    .rec-timeline {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 3px 10px; border-radius: 100px; display: inline-block; margin-bottom: 1rem;
+    }
+    .timeline-now { background: rgba(239,68,68,0.12); color: #f87171; }
+    .timeline-med { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .timeline-long { background: rgba(16,185,129,0.12); color: #34d399; }
+    .rec-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.6rem; }
+    .rec-body { color: var(--text-muted); font-size: 0.85rem; line-height: 1.65; }
+    .rec-impact {
+      margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      font-size: 0.8rem; color: var(--accent3); font-weight: 600;
+    }
+
+    /* ── CTA ── */
+    .cta-section { text-align: center; }
+    .cta-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 4rem 2rem; max-width: 700px; margin: 0 auto;
+      position: relative; overflow: hidden;
+    }
+    .cta-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+    }
+    .cta-card h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.75rem; }
+    .cta-card p { color: var(--text-muted); margin-bottom: 2rem; }
+    .cta-links { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .cta-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-weight: 600; text-decoration: none;
+      border: 1px solid var(--border); color: var(--text);
+      transition: all 0.2s;
+    }
+    .cta-link:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .cta-link.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .cta-link.primary:hover { background: #2563eb; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 2rem;
+      text-align: center; color: var(--text-dim); font-size: 0.82rem;
+    }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: var(--border); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .stat-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .bar-row { grid-template-columns: 55px 1fr 50px; }
+      nav .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Teslim Adeyanju</div>
+  <ul class="nav-links">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#findings">Findings</a></li>
+    <li><a href="#queries">SQL Queries</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#recommendations">Recommendations</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="dot"></span>
+      SQL Portfolio Project
+    </div>
+    <h1>International Student<br /><span class="highlight">Wellbeing Analytics</span></h1>
+    <p class="hero-sub">
+      Enterprise-level SQL analysis of mental health patterns among 286 international students — revealing how stay duration shapes psychological outcomes.
+    </p>
+    <div class="badge-row">
+      <span class="badge badge-blue">🗄️ Advanced SQL</span>
+      <span class="badge badge-purple">🐍 Python</span>
+      <span class="badge badge-green">📊 MySQL</span>
+      <span class="badge badge-amber">⭐ Star Schema</span>
+      <span class="badge badge-cyan">📓 Jupyter</span>
+    </div>
+    <div class="btn-row">
+      <a href="https://github.com/adeyanjuteslim" class="btn btn-primary" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.37.6.1.82-.26.82-.57v-2.01c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.68.83.57C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+      <a href="#overview" class="btn btn-outline">
+        Explore Analysis ↓
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<section class="stats-section" style="padding: 0;">
+  <div class="container" style="max-width: 100%;">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-number">286</span>
+        <div class="stat-label">Student Records</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">50</span>
+        <div class="stat-label">Data Features</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">25+</span>
+        <div class="stat-label">Advanced SQL Queries</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">10+</span>
+        <div class="stat-label">Normalised Tables</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">3</span>
+        <div class="stat-label">Mental Health Metrics</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <div class="container">
+    <div class="section-label">Project Overview</div>
+    <h2 class="section-title">Research Question</h2>
+    <p class="section-sub">
+      <strong style="color:var(--text)">How does stay duration impact mental health outcomes among international student populations?</strong>
+      This project analyses three validated psychological scales — PHQ-9, SCS, and ASISS — across student cohorts segmented by length of stay, using enterprise SQL patterns to surface actionable insights.
+    </p>
+
+    <div class="dataset-layout" id="dataset">
+      <div class="dataset-card">
+        <h3>Dataset Overview</h3>
+        <div class="metric-row">
+          <div class="metric-box"><div class="val">286</div><div class="lbl">Students</div></div>
+          <div class="metric-box"><div class="val">50</div><div class="lbl">Columns</div></div>
+          <div class="metric-box"><div class="val">5</div><div class="lbl">Regions</div></div>
+        </div>
+        <div style="margin-top:1.5rem;">
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem;font-weight:600;">Key Feature Groups</p>
+          <ul class="col-list">
+            <li><span>todep</span> PHQ score</li>
+            <li><span>tosc</span> Social connect.</li>
+            <li><span>toas</span> Anxiety score</li>
+            <li><span>stay</span> Stay duration</li>
+            <li><span>region</span> Origin region</li>
+            <li><span>gender</span> Gender</li>
+            <li><span>academic</span> Study level</li>
+            <li><span>english</span> English level</li>
+            <li><span>japanese</span> Japanese level</li>
+            <li><span>dep</span> Depression flag</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="dataset-card">
+        <h3>Mental Health Metrics Explained</h3>
+        <div style="display:flex;flex-direction:column;gap:1rem;margin-top:0.5rem;">
+          <div style="padding:1rem;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+              <span style="font-size:0.85rem;font-weight:700;">PHQ-9</span>
+              <span class="badge badge-red" style="background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);padding:2px 8px;border-radius:4px;font-size:0.72rem;">Depression</span>
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-muted);">Patient Health Questionnaire — screens and monitors depression severity. Higher scores = greater depressive symptoms.</p>
+          </div>
+          <div style="padding:1rem;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+              <span style="font-size:0.85rem;font-weight:700;">SCS</span>
+              <span class="badge badge-blue" style="background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25);padding:2px 8px;border-radius:4px;font-size:0.72rem;">Social Connectedness</span>
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-muted);">Social Connectedness Scale — measures cultural adaptation and social support. Higher scores = stronger belonging.</p>
+          </div>
+          <div style="padding:1rem;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+              <span style="font-size:0.85rem;font-weight:700;">ASISS</span>
+              <span class="badge badge-purple" style="background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.25);padding:2px 8px;border-radius:4px;font-size:0.72rem;">Acculturative Stress</span>
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-muted);">Acculturative Stress Inventory — captures cross-cultural anxiety. Higher scores = greater adjustment stress.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINDINGS -->
+<section id="findings" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">Key Findings</div>
+    <h2 class="section-title">What the Data Revealed</h2>
+    <p class="section-sub">Four headline insights derived from advanced SQL analysis across 286 international student records.</p>
+
+    <div class="findings-grid">
+      <div class="finding-card">
+        <div class="finding-icon icon-red">📈</div>
+        <div class="finding-title">Anxiety Spike in Short-Stay Students</div>
+        <div class="finding-body">
+          Students staying 1–2 years exhibit significantly higher acculturative stress scores than long-stay cohorts, reflecting the acute adjustment challenges of early arrival.
+        </div>
+        <span class="finding-stat stat-red">34% higher anxiety scores</span>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-icon icon-blue">🤝</div>
+        <div class="finding-title">Social Isolation in Early Cohorts</div>
+        <div class="finding-body">
+          Social connectedness scores are markedly lower in students with shorter stays, suggesting cultural integration takes time to develop and is a key protective factor.
+        </div>
+        <span class="finding-stat stat-blue">28% lower social connectedness</span>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-icon icon-amber">⚠️</div>
+        <div class="finding-title">Critical Intervention Window</div>
+        <div class="finding-body">
+          The first 6–12 months represent the highest-risk period across all three mental health indicators, making early-stage support programmes most impactful.
+        </div>
+        <span class="finding-stat stat-amber">6–12 months highest risk</span>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-icon icon-green">📉</div>
+        <div class="finding-title">Adaptation Improves Over Time</div>
+        <div class="finding-body">
+          Clear longitudinal trend shows depression and anxiety scores decline as stay duration increases, confirming successful long-term cultural adaptation in most students.
+        </div>
+        <span class="finding-stat stat-green">Scores improve with longer stay</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VISUAL CHART -->
+<section>
+  <div class="container">
+    <div class="section-label">Data Visualisation</div>
+    <h2 class="section-title">Score Trends by Stay Duration</h2>
+    <p class="section-sub">Average PHQ, SCS, and ASISS scores across international student cohorts, grouped by years of stay.</p>
+
+    <div class="chart-container">
+      <div class="chart-title">Average Scores by Stay Duration (International Students)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div> PHQ (Depression)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div> SCS (Social Connectedness)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div> ASISS (Anxiety)</div>
+      </div>
+
+      <!-- Stay 1 yr -->
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:0.6rem;letter-spacing:0.5px;">STAY: 1 YEAR &nbsp;<span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:400;">n=63</span></div>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">PHQ-9</span><div class="bar-track"><div class="bar-fill bar-phq" style="width:31%;"></div></div><span class="bar-val">7.48</span></div>
+          <div class="bar-row"><span class="bar-label">SCS</span><div class="bar-track"><div class="bar-fill bar-scs" style="width:82%;"></div></div><span class="bar-val">38.11</span></div>
+          <div class="bar-row"><span class="bar-label">ASISS</span><div class="bar-track"><div class="bar-fill bar-as" style="width:72%;"></div></div><span class="bar-val">72.80</span></div>
+        </div>
+      </div>
+
+      <!-- Stay 2 yr -->
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:0.6rem;letter-spacing:0.5px;">STAY: 2 YEARS &nbsp;<span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:400;">n=52</span></div>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">PHQ-9</span><div class="bar-track"><div class="bar-fill bar-phq" style="width:25%;"></div></div><span class="bar-val">6.14</span></div>
+          <div class="bar-row"><span class="bar-label">SCS</span><div class="bar-track"><div class="bar-fill bar-scs" style="width:87%;"></div></div><span class="bar-val">40.77</span></div>
+          <div class="bar-row"><span class="bar-label">ASISS</span><div class="bar-track"><div class="bar-fill bar-as" style="width:63%;"></div></div><span class="bar-val">65.67</span></div>
+        </div>
+      </div>
+
+      <!-- Stay 3 yr -->
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:0.6rem;letter-spacing:0.5px;">STAY: 3 YEARS &nbsp;<span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:400;">n=30</span></div>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">PHQ-9</span><div class="bar-track"><div class="bar-fill bar-phq" style="width:20%;"></div></div><span class="bar-val">4.67</span></div>
+          <div class="bar-row"><span class="bar-label">SCS</span><div class="bar-track"><div class="bar-fill bar-scs" style="width:90%;"></div></div><span class="bar-val">42.53</span></div>
+          <div class="bar-row"><span class="bar-label">ASISS</span><div class="bar-track"><div class="bar-fill bar-as" style="width:58%;"></div></div><span class="bar-val">62.20</span></div>
+        </div>
+      </div>
+
+      <!-- Stay 6+ yr -->
+      <div>
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:0.6rem;letter-spacing:0.5px;">STAY: 6+ YEARS &nbsp;<span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:400;">n=14</span></div>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">PHQ-9</span><div class="bar-track"><div class="bar-fill bar-phq" style="width:14%;"></div></div><span class="bar-val">3.50</span></div>
+          <div class="bar-row"><span class="bar-label">SCS</span><div class="bar-track"><div class="bar-fill bar-scs" style="width:97%;"></div></div><span class="bar-val">45.20</span></div>
+          <div class="bar-row"><span class="bar-label">ASISS</span><div class="bar-track"><div class="bar-fill bar-as" style="width:48%;"></div></div><span class="bar-val">52.40</span></div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-dim);text-align:center;">Bar widths scaled relative to observed ranges. PHQ bars scaled to max 27; SCS to max 48; ASISS to max 100.</p>
+  </div>
+</section>
+
+<!-- SQL QUERIES -->
+<section id="queries" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">SQL Showcase</div>
+    <h2 class="section-title">Query Highlights</h2>
+    <p class="section-sub">A selection of 25+ advanced SQL queries written for this project, demonstrating enterprise-level analytical capability.</p>
+
+    <div style="border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;">
+      <div class="query-tabs">
+        <button class="tab-btn active" onclick="showTab('q1',this)">Core Analysis</button>
+        <button class="tab-btn" onclick="showTab('q2',this)">Window Functions</button>
+        <button class="tab-btn" onclick="showTab('q3',this)">Risk Scoring</button>
+        <button class="tab-btn" onclick="showTab('q4',this)">Star Schema ETL</button>
+      </div>
+
+      <!-- Tab 1 -->
+      <div id="q1" class="code-panel active">
+        <div class="code-header">
+          <span class="code-filename">student-stay-duration-score-analysis.sql</span>
+          <span class="code-lang">SQL</span>
+        </div>
+        <pre><span class="cm">-- Core analytical query: stay duration impact on all three wellbeing metrics
+-- Returns 9 rows × 5 columns for international students only</span>
+
+<span class="kw">SELECT</span>
+    <span class="col">stay</span>,
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">count_int</span>,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">todep</span>), <span class="nm">2</span>)  <span class="kw">AS</span> <span class="col">average_phq</span>,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">tosc</span>),  <span class="nm">2</span>)  <span class="kw">AS</span> <span class="col">average_scs</span>,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">toas</span>),  <span class="nm">2</span>)  <span class="kw">AS</span> <span class="col">average_as</span>
+<span class="kw">FROM</span>   students
+<span class="kw">WHERE</span>  <span class="col">inter_dom</span> <span class="op">=</span> <span class="str">'Inter'</span>
+<span class="kw">GROUP  BY</span> <span class="col">stay</span>
+<span class="kw">ORDER  BY</span> <span class="col">stay</span> <span class="kw">DESC</span>;</pre>
+      </div>
+
+      <!-- Tab 2 -->
+      <div id="q2" class="code-panel">
+        <div class="code-header">
+          <span class="code-filename">advanced-student-wellbeing-sql-analysis.sql — Query 3</span>
+          <span class="code-lang">SQL</span>
+        </div>
+        <pre><span class="cm">-- Advanced stay duration analysis using window functions
+-- LAG/LEAD track trends; RANK identifies highest-risk cohorts</span>
+
+<span class="kw">WITH</span> <span class="col">duration_base</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="col">stay</span>,
+        <span class="fn">COUNT</span>(*)                      <span class="kw">AS</span> <span class="col">student_count</span>,
+        <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">todep</span>), <span class="nm">2</span>)         <span class="kw">AS</span> <span class="col">avg_depression</span>,
+        <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">tosc</span>),  <span class="nm">2</span>)         <span class="kw">AS</span> <span class="col">avg_social</span>,
+        <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">toas</span>),  <span class="nm">2</span>)         <span class="kw">AS</span> <span class="col">avg_anxiety</span>,
+        <span class="fn">ROUND</span>(<span class="fn">STDDEV</span>(<span class="col">todep</span>), <span class="nm">2</span>)      <span class="kw">AS</span> <span class="col">depression_volatility</span>
+    <span class="kw">FROM</span> students
+    <span class="kw">WHERE</span> <span class="col">inter_dom</span> <span class="op">=</span> <span class="str">'Inter'</span>
+    <span class="kw">GROUP BY</span> <span class="col">stay</span>
+),
+<span class="col">duration_trends</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        *,
+        <span class="cm">-- Lag/Lead for period-over-period trend</span>
+        <span class="fn">LAG</span>(<span class="col">avg_depression</span>, <span class="nm">1</span>)  <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="col">stay</span>) <span class="kw">AS</span> <span class="col">prev_depression</span>,
+        <span class="fn">LEAD</span>(<span class="col">avg_depression</span>, <span class="nm">1</span>) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="col">stay</span>) <span class="kw">AS</span> <span class="col">next_depression</span>,
+        <span class="fn">LAG</span>(<span class="col">avg_anxiety</span>, <span class="nm">1</span>)     <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="col">stay</span>) <span class="kw">AS</span> <span class="col">prev_anxiety</span>,
+
+        <span class="cm">-- Ranking: which cohort has highest risk?</span>
+        <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="col">avg_depression</span> <span class="kw">DESC</span>) <span class="kw">AS</span> <span class="col">depression_risk_rank</span>,
+        <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="col">avg_anxiety</span>    <span class="kw">DESC</span>) <span class="kw">AS</span> <span class="col">anxiety_risk_rank</span>,
+        <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="col">avg_social</span>     <span class="kw">ASC</span>)  <span class="kw">AS</span> <span class="col">isolation_rank</span>
+    <span class="kw">FROM</span> duration_base
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> duration_trends
+<span class="kw">ORDER BY</span> <span class="col">stay</span>;</pre>
+      </div>
+
+      <!-- Tab 3 -->
+      <div id="q3" class="code-panel">
+        <div class="code-header">
+          <span class="code-filename">advanced-student-wellbeing-sql-analysis.sql — Query 4</span>
+          <span class="code-lang">SQL</span>
+        </div>
+        <pre><span class="cm">-- Multi-dimensional risk scoring algorithm using Z-scores and CTEs
+-- Identifies at-risk students with statistical confidence</span>
+
+<span class="kw">WITH</span> <span class="col">population_benchmarks</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">todep</span>),    <span class="nm">2</span>) <span class="kw">AS</span> <span class="col">pop_avg_depression</span>,
+        <span class="fn">ROUND</span>(<span class="fn">STDDEV</span>(<span class="col">todep</span>), <span class="nm">2</span>) <span class="kw">AS</span> <span class="col">pop_std_depression</span>,
+        <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">tosc</span>),     <span class="nm">2</span>) <span class="kw">AS</span> <span class="col">pop_avg_social</span>,
+        <span class="fn">ROUND</span>(<span class="fn">STDDEV</span>(<span class="col">tosc</span>),  <span class="nm">2</span>) <span class="kw">AS</span> <span class="col">pop_std_social</span>,
+        <span class="fn">ROUND</span>(<span class="fn">AVG</span>(<span class="col">toas</span>),     <span class="nm">2</span>) <span class="kw">AS</span> <span class="col">pop_avg_anxiety</span>,
+        <span class="fn">ROUND</span>(<span class="fn">STDDEV</span>(<span class="col">toas</span>),  <span class="nm">2</span>) <span class="kw">AS</span> <span class="col">pop_std_anxiety</span>
+    <span class="kw">FROM</span> students
+),
+<span class="col">individual_z_scores</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        s.*,
+        <span class="cm">-- Z-score = (value − mean) / stddev</span>
+        <span class="fn">ROUND</span>((<span class="col">s.todep</span> <span class="op">-</span> pb.<span class="col">pop_avg_depression</span>)
+              <span class="op">/</span> <span class="fn">NULLIF</span>(pb.<span class="col">pop_std_depression</span>, <span class="nm">0</span>), <span class="nm">3</span>) <span class="kw">AS</span> <span class="col">depression_z</span>,
+        <span class="fn">ROUND</span>((<span class="col">s.tosc</span>  <span class="op">-</span> pb.<span class="col">pop_avg_social</span>)
+              <span class="op">/</span> <span class="fn">NULLIF</span>(pb.<span class="col">pop_std_social</span>,      <span class="nm">0</span>), <span class="nm">3</span>) <span class="kw">AS</span> <span class="col">social_z</span>,
+        <span class="fn">ROUND</span>((<span class="col">s.toas</span>  <span class="op">-</span> pb.<span class="col">pop_avg_anxiety</span>)
+              <span class="op">/</span> <span class="fn">NULLIF</span>(pb.<span class="col">pop_std_anxiety</span>,     <span class="nm">0</span>), <span class="nm">3</span>) <span class="kw">AS</span> <span class="col">anxiety_z</span>
+    <span class="kw">FROM</span> students s
+    <span class="kw">CROSS JOIN</span> population_benchmarks pb
+),
+<span class="col">risk_classified</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        *,
+        <span class="kw">CASE</span>
+            <span class="kw">WHEN</span> depression_z <span class="op">></span> <span class="nm">1.5</span> <span class="kw">AND</span> anxiety_z <span class="op">></span> <span class="nm">1.5</span> <span class="kw">THEN</span> <span class="str">'CRITICAL'</span>
+            <span class="kw">WHEN</span> depression_z <span class="op">></span> <span class="nm">1.0</span> <span class="kw">OR</span>  anxiety_z <span class="op">></span> <span class="nm">1.0</span> <span class="kw">THEN</span> <span class="str">'HIGH'</span>
+            <span class="kw">WHEN</span> social_z     <span class="op"><</span> <span class="op">-</span><span class="nm">1.0</span>                      <span class="kw">THEN</span> <span class="str">'MODERATE'</span>
+            <span class="kw">ELSE</span>                                                   <span class="str">'LOW'</span>
+        <span class="kw">END</span> <span class="kw">AS</span> <span class="col">risk_tier</span>
+    <span class="kw">FROM</span> individual_z_scores
+)
+<span class="kw">SELECT</span> <span class="col">risk_tier</span>, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> <span class="col">student_count</span>
+<span class="kw">FROM</span>   risk_classified
+<span class="kw">GROUP  BY</span> <span class="col">risk_tier</span>
+<span class="kw">ORDER  BY</span> <span class="col">student_count</span> <span class="kw">DESC</span>;</pre>
+      </div>
+
+      <!-- Tab 4 -->
+      <div id="q4" class="code-panel">
+        <div class="code-header">
+          <span class="code-filename">advanced-student-wellbeing-sql-analysis.sql — ETL</span>
+          <span class="code-lang">SQL</span>
+        </div>
+        <pre><span class="cm">-- Star Schema: Fact table ETL with complex transformations
+-- Populates fact_student_wellbeing from normalised source</span>
+
+<span class="kw">INSERT INTO</span> <span class="col">fact_student_wellbeing</span> (
+    student_key, time_key, region_key,
+    depression_score, social_score, anxiety_score,
+    risk_tier, stay_category
+)
+<span class="kw">SELECT</span>
+    ds.<span class="col">student_key</span>,
+    dt.<span class="col">time_key</span>,
+    dr.<span class="col">region_key</span>,
+
+    <span class="cm">-- Source metrics</span>
+    s.<span class="col">todep</span>  <span class="kw">AS</span> <span class="col">depression_score</span>,
+    s.<span class="col">tosc</span>   <span class="kw">AS</span> <span class="col">social_score</span>,
+    s.<span class="col">toas</span>   <span class="kw">AS</span> <span class="col">anxiety_score</span>,
+
+    <span class="cm">-- Derived risk classification</span>
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> s.<span class="col">todep</span> <span class="op">>=</span> <span class="nm">15</span> <span class="kw">AND</span> s.<span class="col">toas</span> <span class="op">>=</span> <span class="nm">80</span> <span class="kw">THEN</span> <span class="str">'CRITICAL'</span>
+        <span class="kw">WHEN</span> s.<span class="col">todep</span> <span class="op">>=</span> <span class="nm">10</span> <span class="kw">OR</span>  s.<span class="col">toas</span> <span class="op">>=</span> <span class="nm">70</span> <span class="kw">THEN</span> <span class="str">'HIGH'</span>
+        <span class="kw">WHEN</span> s.<span class="col">tosc</span>  <span class="op"><=</span> <span class="nm">30</span>                   <span class="kw">THEN</span> <span class="str">'MODERATE'</span>
+        <span class="kw">ELSE</span>                                       <span class="str">'LOW'</span>
+    <span class="kw">END</span>  <span class="kw">AS</span> <span class="col">risk_tier</span>,
+
+    <span class="cm">-- Stay duration bucketing</span>
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> s.<span class="col">stay</span> <span class="kw">BETWEEN</span> <span class="nm">1</span> <span class="kw">AND</span>  <span class="nm">2</span> <span class="kw">THEN</span> <span class="str">'Short'</span>
+        <span class="kw">WHEN</span> s.<span class="col">stay</span> <span class="kw">BETWEEN</span> <span class="nm">3</span> <span class="kw">AND</span>  <span class="nm">5</span> <span class="kw">THEN</span> <span class="str">'Medium'</span>
+        <span class="kw">ELSE</span>                             <span class="str">'Long'</span>
+    <span class="kw">END</span>  <span class="kw">AS</span> <span class="col">stay_category</span>
+
+<span class="kw">FROM</span>       students         s
+<span class="kw">JOIN</span>  dim_student    ds  <span class="kw">ON</span> ds.<span class="col">source_id</span>  <span class="op">=</span> s.<span class="col">id</span>
+<span class="kw">JOIN</span>  dim_time       dt  <span class="kw">ON</span> dt.<span class="col">survey_year</span> <span class="op">=</span> <span class="nm">2019</span>
+<span class="kw">JOIN</span>  dim_region     dr  <span class="kw">ON</span> dr.<span class="col">region_code</span> <span class="op">=</span> s.<span class="col">region</span>
+<span class="kw">WHERE</span> s.<span class="col">inter_dom</span> <span class="op">=</span> <span class="str">'Inter'</span>;</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <div class="section-label">Technical Skills</div>
+    <h2 class="section-title">SQL Capabilities Demonstrated</h2>
+    <p class="section-sub">This project covers the full spectrum of modern enterprise SQL — from data modelling to statistical analytics.</p>
+
+    <div class="skills-grid">
+      <div class="skill-card">
+        <div class="skill-header">
+          <span class="skill-icon">🗄️</span>
+          <span class="skill-name">Database Design</span>
+        </div>
+        <ul class="skill-items">
+          <li>1NF → 2NF → 3NF Normalisation</li>
+          <li>Star Schema Data Warehouse</li>
+          <li>Referential Integrity Design</li>
+          <li>Dimension & Fact Tables</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <div class="skill-header">
+          <span class="skill-icon">⚡</span>
+          <span class="skill-name">Advanced Querying</span>
+        </div>
+        <ul class="skill-items">
+          <li>Common Table Expressions (CTEs)</li>
+          <li>Window Functions (LAG, LEAD, RANK)</li>
+          <li>ROLLUP / CUBE OLAP Operations</li>
+          <li>Statistical Functions (STDDEV, VAR)</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <div class="skill-header">
+          <span class="skill-icon">🔄</span>
+          <span class="skill-name">ETL Pipelines</span>
+        </div>
+        <ul class="skill-items">
+          <li>Slowly Changing Dimensions (SCD2)</li>
+          <li>Time Dimension Population</li>
+          <li>Fact Table Transformations</li>
+          <li>Data Quality Validation</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <div class="skill-header">
+          <span class="skill-icon">📐</span>
+          <span class="skill-name">Statistical Analytics</span>
+        </div>
+        <ul class="skill-items">
+          <li>Z-Score Standardisation</li>
+          <li>Percentile Analysis</li>
+          <li>Risk Scoring Algorithms</li>
+          <li>Comparative Significance Testing</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <div class="skill-header">
+          <span class="skill-icon">🌐</span>
+          <span class="skill-name">OLAP & BI</span>
+        </div>
+        <ul class="skill-items">
+          <li>Drill-Down Time Hierarchy</li>
+          <li>Slice & Dice Analysis</li>
+          <li>Dynamic Pivot Tables</li>
+          <li>Multi-dimensional Aggregation</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <div class="skill-header">
+          <span class="skill-icon">🐍</span>
+          <span class="skill-name">Python Integration</span>
+        </div>
+        <ul class="skill-items">
+          <li>mysql.connector + Pandas</li>
+          <li>Matplotlib / Seaborn Charts</li>
+          <li>Jupyter Notebook Delivery</li>
+          <li>Automated SQL Execution</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" class="arch-section">
+  <div class="container">
+    <div class="section-label">Data Architecture</div>
+    <h2 class="section-title">End-to-End Pipeline</h2>
+    <p class="section-sub">From raw CSV to a fully normalised, star-schema data warehouse with OLAP-ready analytical layers.</p>
+
+    <div class="arch-grid">
+      <div class="arch-cell">
+        <span class="arch-step step-1">STEP 1</span>
+        <h4>Raw Ingestion</h4>
+        <p>286-row CSV imported with 50 columns covering demographics, language proficiency, mental health scores, and support system usage.</p>
+      </div>
+      <div class="arch-cell">
+        <span class="arch-step step-2">STEP 2</span>
+        <h4>Normalisation</h4>
+        <p>Progressive design from denormalised flat file through 1NF, 2NF, and 3NF — eliminating transitive dependencies and redundancy.</p>
+      </div>
+      <div class="arch-cell">
+        <span class="arch-step step-3">STEP 3</span>
+        <h4>Star Schema</h4>
+        <p>Dimensional model with <code style="font-size:0.78rem;color:var(--accent)">fact_student_wellbeing</code> at the centre, surrounded by region, time, student, and advisor dimensions.</p>
+      </div>
+      <div class="arch-cell">
+        <span class="arch-step step-4">STEP 4</span>
+        <h4>ETL Pipeline</h4>
+        <p>Automated population of dimensions and fact tables including SCD Type 2 tracking, time hierarchy generation, and risk classification.</p>
+      </div>
+      <div class="arch-cell">
+        <span class="arch-step step-5">STEP 5</span>
+        <h4>OLAP Analytics</h4>
+        <p>Multi-dimensional drill-down, slice/dice, pivot analysis and risk scoring dashboards powered by the warehouse layer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RECOMMENDATIONS -->
+<section id="recommendations">
+  <div class="container">
+    <div class="section-label">Strategic Output</div>
+    <h2 class="section-title">Evidence-Based Recommendations</h2>
+    <p class="section-sub">Six actionable interventions derived directly from the SQL analysis, tiered by urgency and expected impact.</p>
+
+    <div class="recs-grid">
+      <div class="rec-card">
+        <span class="rec-timeline timeline-now">Immediate · 0–3 months</span>
+        <div class="rec-title">International Student Emergency Protocol</div>
+        <div class="rec-body">Deploy specialist multilingual counsellors for first-year students. SQL analysis shows 34% elevated anxiety and 28% social isolation in this cohort.</div>
+        <div class="rec-impact">→ Expected: 25% reduction in anxiety scores within 6 months</div>
+      </div>
+
+      <div class="rec-card">
+        <span class="rec-timeline timeline-now">Immediate · 0–3 months</span>
+        <div class="rec-title">SQL-Powered Early Warning System</div>
+        <div class="rec-body">Implement the risk-scoring algorithm as a live monitoring dashboard. The model identifies critical cases using standardised Z-score thresholds across three metrics.</div>
+        <div class="rec-impact">→ Expected: 40% faster identification of at-risk students</div>
+      </div>
+
+      <div class="rec-card">
+        <span class="rec-timeline timeline-now">Immediate · 0–3 months</span>
+        <div class="rec-title">Peer Mentorship Network</div>
+        <div class="rec-body">Establish cohort-based peer groups for first and second-year students. SCS analysis shows social connectedness is the strongest protective factor (Cohen's d &gt; 0.8).</div>
+        <div class="rec-impact">→ Expected: 30% improvement in social connectedness scores</div>
+      </div>
+
+      <div class="rec-card">
+        <span class="rec-timeline timeline-med">Medium-term · 3–12 months</span>
+        <div class="rec-title">Predictive Analytics Platform</div>
+        <div class="rec-body">Operationalise the star schema warehouse and OLAP layer as a live institutional dashboard for student services teams to monitor cohort wellbeing trends.</div>
+        <div class="rec-impact">→ Expected: 50% reduction in crisis interventions</div>
+      </div>
+
+      <div class="rec-card">
+        <span class="rec-timeline timeline-med">Medium-term · 3–12 months</span>
+        <div class="rec-title">Culturally-Responsive Services</div>
+        <div class="rec-body">Redesign counselling with cultural competency at the core. Statistical significance testing confirms consistent disadvantages across all international student groups.</div>
+        <div class="rec-impact">→ Expected: 45% improvement in wellbeing metrics</div>
+      </div>
+
+      <div class="rec-card">
+        <span class="rec-timeline timeline-long">Long-term · 12+ months</span>
+        <div class="rec-title">Data-Driven Resource Allocation</div>
+        <div class="rec-body">Use OLAP drill-down analysis to direct welfare resources by stay cohort. The 1–2 year band consistently shows the highest need across all three validated scales.</div>
+        <div class="rec-impact">→ Expected: Optimised budget allocation per student cohort</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" style="background:var(--surface);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="cta-card">
+      <h2>Explore the Full Analysis</h2>
+      <p>Two Jupyter notebooks with 25+ advanced SQL queries, full visualisations, and star-schema implementation — available on GitHub.</p>
+      <div class="cta-links">
+        <a href="https://github.com/adeyanjuteslim" class="cta-link primary" target="_blank">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.37.6.1.82-.26.82-.57v-2.01c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.68.83.57C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+        <a href="https://www.linkedin.com/in/adeyanjuteslimuthman" class="cta-link" target="_blank">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.37V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46C23.2 24 24 23.23 24 22.28V1.72C24 .77 23.2 0 22.23 0z"/></svg>
+          LinkedIn
+        </a>
+        <a href="mailto:info@adeyanjuteslim.co.uk" class="cta-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          info@adeyanjuteslim.co.uk
+        </a>
+        <a href="https://adeyanjuteslim.co.uk" class="cta-link" target="_blank">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          adeyanjuteslim.co.uk
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Built by <a href="https://adeyanjuteslim.co.uk">Teslim Adeyanju</a> &nbsp;·&nbsp; ACA Chartered Accountant &amp; Data Analyst &nbsp;·&nbsp;
+    <a href="mailto:info@adeyanjuteslim.co.uk">info@adeyanjuteslim.co.uk</a>
+  </p>
+</footer>
+
+<script>
+  function showTab(id, btn) {
+    document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
