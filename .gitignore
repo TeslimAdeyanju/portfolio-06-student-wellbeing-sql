@@ -1,0 +1,118 @@
+# International Student Wellbeing Analytics - Git Ignore File
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Database Credentials
+*.key
+*.pem
+secrets.json
+.credentials
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+*.log
+
+# Data Files (if sensitive)
+# Uncomment if student data should not be committed
+# *.csv
+# data/
+# raw_data/
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Cache
+.cache/
+*.cache
+
+# Large Files
+*.zip
+*.tar.gz
+*.rar
+
+# Database Files (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Output Files (generated)
+output/
+results/
+*.html
+
+# Python Coverage
+.coverage
+htmlcov/
+
+# Pytest
+.pytest_cache/
+test-results.xml
+
+# Virtual Environments (OS specific)
+venv.bak/
+env.bak/
+
+# OS-specific
+.vscode-server/
+
+# Node modules (if using any JS tools)
+node_modules/
+npm-debug.log
+
+# Keep these important files
+!requirements.txt
+!schema.sql
+!data_dictionary.md
+!.gitignore
+!README.md
+!PROJECT_IMPLEMENTATION_GUIDE.md
+!EXECUTION_CHECKLIST.md
