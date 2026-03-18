@@ -114,6 +114,7 @@ WITH demographic_stats AS (
     FROM students 
     GROUP BY inter_dom
 ),
+
 percentile_analysis AS (
     SELECT 
         inter_dom as student_status,
@@ -170,14 +171,16 @@ SELECT
         WHEN ds.avg_anxiety_score > 35 THEN 'MODERATE_ANXIETY'
         ELSE 'LOW_ANXIETY'
     END as anxiety_risk_level
-FROM demographic_stats ds
-JOIN percentile_analysis pa ON ds.student_status = pa.student_status
+FROM demographic_stats  as ds
+JOIN percentile_analysis as pa ON ds.student_status = pa.student_status
 ORDER BY ds.population_size DESC;
 
 -- ============================
 -- Query 6
 -- ============================
 -- SECTION 4.1: Stay Duration Segmentation Analysis
+
+-- CTE: duration_segments
 WITH duration_segments AS (
     SELECT 
         CASE 
@@ -200,6 +203,7 @@ WITH duration_segments AS (
     WHERE inter_dom = 'Inter'
     GROUP BY duration_segment, stay
 ),
+-- CTE: segment_risks
 segment_risks AS (
     SELECT 
         duration_segment,
@@ -232,6 +236,12 @@ segment_risks AS (
         anxiety_variance
     FROM duration_segments
 )
+
+-- To view the combination of the both CTE
+-- select *
+-- from segment_risks 
+
+-- Anayisis to view the Stay Duration Segmentation Analysis
 SELECT 
     duration_segment,
     student_count,
@@ -258,10 +268,17 @@ ORDER BY
         WHEN duration_segment = 'Long-stay (5+yr)' THEN 3
     END;
 
+
+
+
+
+
 -- ============================
 -- Query 7
 -- ============================
 -- SECTION 4.2: International vs Domestic Comparative Studies
+
+-- CTE: population_stats
 WITH population_stats AS (
     SELECT 
         inter_dom as student_population,
@@ -291,6 +308,8 @@ WITH population_stats AS (
     FROM students
     GROUP BY inter_dom
 ),
+
+-- CTE: risk_prevalence
 risk_prevalence AS (
     SELECT 
         inter_dom,
@@ -306,6 +325,8 @@ risk_prevalence AS (
     FROM students
     GROUP BY inter_dom
 )
+
+-- ANnalysis of International vs Domestic Comparative Studies
 SELECT 
     ps.student_population,
     ps.n as total_population,
@@ -336,7 +357,7 @@ SELECT
         WHEN ps.depression_mean > 12 OR ps.anxiety_mean > 45 THEN 'MODERATE_BURDEN'
         ELSE 'LOW_BURDEN'
     END as overall_burden_level
-FROM population_stats ps
+FROM population_stats as ps
 JOIN risk_prevalence rp ON ps.student_population = rp.inter_dom
 ORDER BY 
     CASE WHEN ps.student_population = 'Inter' THEN 1 ELSE 2 END;
