@@ -108,11 +108,9 @@ env.bak/
 node_modules/
 npm-debug.log
 
-# Keep these important files
-!requirements.txt
-!schema.sql
-!data_dictionary.md
-!.gitignore
-!README.md
-!PROJECT_IMPLEMENTATION_GUIDE.md
-!EXECUTION_CHECKLIST.md
+# Claude Code working directory
+.claude/
+
+# Project planning files (internal only)
+EXECUTION_CHECKLIST.md
+PROJECT_IMPLEMENTATION_GUIDE.md
