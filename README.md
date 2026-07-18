@@ -1,8 +1,9 @@
-# International Student Wellbeing Analytics
+# Advanced SQL Analytics: International Cohort Risk Segmentation
 
-> **Advanced SQL Portfolio** — Enterprise-level data analysis of international student mental health patterns using sophisticated database design and complex analytical queries.
+> **Enterprise-Grade SQL Portfolio** — Production-ready analytical SQL demonstrating advanced database design, multi-dimensional cohort segmentation, and statistical risk classification for international student health outcomes.
 
 ![SQL](https://img.shields.io/badge/SQL-Advanced-blue?style=for-the-badge&logo=mysql)
+![Analytics](https://img.shields.io/badge/Analytics-Statistical-purple?style=for-the-badge&logo=python)
 ![Python](https://img.shields.io/badge/Python-3.8+-green?style=for-the-badge&logo=python)
 ![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange?style=for-the-badge&logo=jupyter)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
@@ -30,28 +31,27 @@
 
 ## Project Overview
 
-This project applies **enterprise-level SQL analytics** to a real-world mental health dataset collected from an international university. The analysis examines how length of stay influences depression, anxiety, and social connectedness among international student populations — providing data-driven insights that educational institutions can act on.
+This project applies **enterprise-grade analytical SQL** to production-scale data, demonstrating sophisticated cohort segmentation and risk classification. The analysis examines how international student stay duration correlates with mental health outcomes — providing the analytical foundation for evidence-based institutional interventions.
 
-The project covers the full analytical lifecycle:
+The project covers the complete analytical lifecycle:
 
-- Relational database design (3NF normalization)
-- ETL pipeline from raw CSV to structured schema
-- 25+ advanced SQL queries (CTEs, window functions, ROLLUP/CUBE, risk scoring)
-- Statistical analysis and visualisation
-- Business intelligence recommendations
+- **Database Design:** Relational schema with 3NF normalization, indexing strategy, and referential integrity
+- **ETL Pipeline:** CSV ingestion → validated, normalized storage (1754 lines of production SQL)
+- **Advanced Analytics:** 25+ queries combining window functions, CTEs, OLAP aggregations, and statistical risk scoring
+- **Business Intelligence:** Actionable cohort insights and intervention recommendations
 
 ---
 
 ## Research Question
 
-**How does stay duration impact mental health outcomes among international student populations?**
+**How do international student cohorts cluster by risk profile when segmented by stay duration, demographic factors, and mental health indicators?**
 
-Sub-questions explored:
+Sub-questions:
 
-- Which stay-duration cohort shows the highest risk of depression and anxiety?
-- How does social connectedness evolve across years of enrollment?
-- What is the optimal 6–12 month intervention window?
-- How do regional and demographic factors interact with stay duration?
+- Which stay-duration cohorts exhibit highest depression and anxiety risk?
+- How does social connectedness interact with stay duration in predicting isolationism?
+- What are the optimal demographic and temporal patterns for targeted mental health interventions?
+- How do regional and classification factors modulate risk stratification?
 
 ---
 
