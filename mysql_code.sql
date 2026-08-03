@@ -362,6 +362,8 @@ JOIN risk_prevalence rp ON ps.student_population = rp.inter_dom
 ORDER BY 
     CASE WHEN ps.student_population = 'Inter' THEN 1 ELSE 2 END;
 
+
+
 -- ============================
 -- Query 8
 -- ============================
@@ -432,6 +434,7 @@ composite_scores AS (
         END as risk_level
     FROM normalized_scores
 )
+
 SELECT 
     inter_dom,
     COUNT(*) as n,
@@ -456,6 +459,9 @@ SELECT
     END as population_burden_level
 FROM composite_scores
 GROUP BY inter_dom;
+
+
+
 
 -- ============================
 -- Query 9
