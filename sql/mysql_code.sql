@@ -1092,6 +1092,114 @@ ORDER BY sp.depression_mean DESC;
 -- ============================
 -- Query 16
 -- ============================
+-- SECTION 5.5: Recursive CTE — Stay-Duration Ladder & Gap Detection
+-- Generates the full 1-10 year stay ladder and LEFT JOINs cohort stats onto it, so
+-- enrollment years with zero students in this sample surface as an explicit gap
+-- rather than silently disappearing from a plain GROUP BY.
+WITH RECURSIVE stay_ladder AS (
+    SELECT 1 AS stay_year
+    UNION ALL
+    SELECT stay_year + 1 FROM stay_ladder WHERE stay_year < 10
+),
+cohort_stats AS (
+    SELECT
+        stay,
+        COUNT(*) AS n_students,
+        ROUND(AVG(todep), 2) AS avg_depression,
+        ROUND(AVG(tosc), 2) AS avg_social,
+        ROUND(AVG(toas), 2) AS avg_anxiety
+    FROM students
+    WHERE inter_dom = 'Inter'
+    GROUP BY stay
+)
+SELECT
+    l.stay_year,
+    COALESCE(c.n_students, 0) AS n_students,
+    c.avg_depression,
+    c.avg_social,
+    c.avg_anxiety,
+    CASE WHEN c.n_students IS NULL THEN 'NO DATA - GAP YEAR' ELSE 'DATA PRESENT' END AS coverage_flag
+FROM stay_ladder l
+LEFT JOIN cohort_stats c ON c.stay = l.stay_year
+ORDER BY l.stay_year;
+
+-- ============================
+-- Query 17
+-- ============================
+-- SECTION 5.6: CUBE-Equivalent Multi-Dimensional Aggregation
+-- MySQL does not support the standard GROUP BY CUBE(...) syntax (only ROLLUP is
+-- implemented server-side), so a true cube — every combination of the grouping
+-- columns, not just the hierarchical subset ROLLUP gives you — is built manually
+-- with UNION ALL: (region, inter_dom), (region) alone, (inter_dom) alone, and the
+-- grand total. Four grain levels for two dimensions, exactly what CUBE(a, b) would
+-- produce natively on Postgres/SQL Server/Oracle.
+SELECT region, inter_dom, COUNT(*) AS n_students,
+       ROUND(AVG(todep), 2) AS avg_depression, ROUND(AVG(toas), 2) AS avg_anxiety, ROUND(AVG(tosc), 2) AS avg_social
+FROM students
+GROUP BY region, inter_dom
+
+UNION ALL
+
+SELECT region, 'ALL' AS inter_dom, COUNT(*),
+       ROUND(AVG(todep), 2), ROUND(AVG(toas), 2), ROUND(AVG(tosc), 2)
+FROM students
+GROUP BY region
+
+UNION ALL
+
+SELECT 'ALL REGIONS' AS region, inter_dom, COUNT(*),
+       ROUND(AVG(todep), 2), ROUND(AVG(toas), 2), ROUND(AVG(tosc), 2)
+FROM students
+GROUP BY inter_dom
+
+UNION ALL
+
+SELECT 'ALL REGIONS', 'ALL', COUNT(*),
+       ROUND(AVG(todep), 2), ROUND(AVG(toas), 2), ROUND(AVG(tosc), 2)
+FROM students
+
+ORDER BY region, inter_dom;
+
+-- ============================
+-- Query 18
+-- ============================
+-- SECTION 5.7: Percentile & Median via Window Functions
+-- MySQL has no PERCENTILE_CONT/PERCENTILE_DISC ordered-set aggregate (unlike
+-- Postgres/Oracle/SQL Server), so median and quartiles are computed manually:
+-- ROW_NUMBER() ranks each value within its cohort, COUNT() OVER() gives the cohort
+-- size, and averaging the value(s) at the rank(s) nearest each target fraction
+-- ((n+1)/2 for the median, (n+1)/4 for Q1, 3(n+1)/4 for Q3) reproduces
+-- PERCENTILE_CONT's linear-interpolation result for even-sized groups and its
+-- nearest-rank result otherwise.
+WITH bucketed AS (
+    SELECT
+        CASE WHEN stay BETWEEN 1 AND 2 THEN 'Short-stay (1-2yr)'
+             WHEN stay BETWEEN 3 AND 4 THEN 'Medium-stay (3-4yr)'
+             ELSE 'Long-stay (5+yr)' END AS stay_bucket,
+        todep, toas
+    FROM students
+    WHERE inter_dom = 'Inter'
+),
+ranked AS (
+    SELECT
+        stay_bucket, todep, toas,
+        ROW_NUMBER() OVER (PARTITION BY stay_bucket ORDER BY todep) AS dep_rn,
+        COUNT(*) OVER (PARTITION BY stay_bucket) AS cnt
+    FROM bucketed
+)
+SELECT
+    stay_bucket,
+    MAX(cnt) AS n,
+    ROUND(AVG(CASE WHEN dep_rn IN (FLOOR((cnt+1)/2), CEIL((cnt+1)/2)) THEN todep END), 2) AS median_depression,
+    ROUND(AVG(CASE WHEN dep_rn IN (FLOOR((cnt+1)/4), CEIL((cnt+1)/4)) THEN todep END), 2) AS q1_depression,
+    ROUND(AVG(CASE WHEN dep_rn IN (FLOOR(3*(cnt+1)/4), CEIL(3*(cnt+1)/4)) THEN todep END), 2) AS q3_depression
+FROM ranked
+GROUP BY stay_bucket
+ORDER BY FIELD(stay_bucket, 'Short-stay (1-2yr)', 'Medium-stay (3-4yr)', 'Long-stay (5+yr)');
+
+-- ============================
+-- Query 19
+-- ============================
 -- SECTION 6.1: Risk Factor Identification & Correlation Analysis (MySQL 8.0 Compatible)
 WITH effect_size_analysis AS (
     -- Calculate effect sizes between International and Domestic students
@@ -1189,7 +1297,7 @@ SELECT
     (SELECT MAX(high_isolation_pct) FROM population_statistics) as max_isolation_pct;
 
 -- ============================
--- Query 17
+-- Query 20
 -- ============================
 -- SECTION 6.2: Early Intervention Timing & Optimal Support Window Analysis (MySQL 8.0)
 WITH cohort_analysis AS (
@@ -1267,7 +1375,7 @@ FROM intervention_opportunity_mapping iom
 ORDER BY iom.intervention_urgency_score DESC;
 
 -- ============================
--- Query 18
+-- Query 21
 -- ============================
 -- SECTION 6.3: Resource Optimization & Cost-Effectiveness Analysis (MySQL 8.0)
 WITH population_segments AS (
@@ -1367,7 +1475,7 @@ ORDER BY CASE
 END;
 
 -- ============================
--- Query 19
+-- Query 22
 -- ============================
 -- SECTION 6.4: Predictive Analytics & Student Retention/Success Modeling (MySQL 8.0)
 WITH population_baseline AS (
@@ -1456,7 +1564,7 @@ ORDER BY predicted_retention_probability ASC
 LIMIT 100;
 
 -- ============================
--- Query 20
+-- Query 23
 -- ============================
 -- Advanced Multi-Dimensional Risk Scoring System
 WITH row_ranked AS (
@@ -1614,7 +1722,7 @@ ORDER BY composite_risk_score DESC, stay ASC
 LIMIT 50;
 
 -- ============================
--- Query 21
+-- Query 24
 -- ============================
 -- Comprehensive Comparative Analysis Between Student Populations
 WITH population_metrics AS (
